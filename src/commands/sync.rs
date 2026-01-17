@@ -5,7 +5,7 @@ use crate::config::Config;
 use crate::git::{self, FileContent};
 use crate::patch::{self, PatchEntry};
 
-pub fn run() -> Result<()> {
+pub fn run(ignore_uncommitted: bool) -> Result<()> {
     let config = Config::load()?;
     let repo = git::open_repo()?;
     git::ensure_on_forkme_branch(&repo)?;
@@ -19,9 +19,16 @@ pub fn run() -> Result<()> {
 
     // Track which files have been processed
     let mut processed_files: HashSet<String> = HashSet::new();
+    let mut skipped_files: Vec<String> = Vec::new();
 
     // Generate and save patches/binaries
     for change in &changes {
+        // Check if file has uncommitted changes and should be skipped
+        if ignore_uncommitted && git::has_uncommitted_changes(&repo, &change.path)? {
+            skipped_files.push(change.path.clone());
+            continue;
+        }
+
         // First, remove any existing entries for this file (clean slate)
         patch::delete_all_for_file(&change.path)?;
 
@@ -91,6 +98,16 @@ pub fn run() -> Result<()> {
     patch::cleanup_empty_dirs()?;
 
     println!("\nSynced {} files.", processed_files.len());
+
+    if !skipped_files.is_empty() {
+        println!(
+            "Skipped {} file(s) with uncommitted changes:",
+            skipped_files.len()
+        );
+        for file in &skipped_files {
+            println!("  {}", file);
+        }
+    }
 
     Ok(())
 }

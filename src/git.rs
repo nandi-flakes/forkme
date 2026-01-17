@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Result};
-use git2::{DiffOptions, Repository, ResetType};
+use git2::{DiffOptions, Repository, ResetType, Status};
 use std::path::Path;
 
 pub const SOURCE_DIR: &str = "source";
@@ -79,7 +79,31 @@ pub fn reset_to_upstream(repo: &Repository, branch: &str) -> Result<()> {
 
 pub fn is_working_tree_clean(repo: &Repository) -> Result<bool> {
     let statuses = repo.statuses(None)?;
-    Ok(statuses.is_empty())
+
+    if !statuses.is_empty() {
+        for status in &statuses {
+            if status.status() != Status::IGNORED {
+                return Ok(false);
+            }
+        }
+    }
+    Ok(true)
+}
+
+pub fn has_uncommitted_changes(repo: &Repository, file_path: &str) -> Result<bool> {
+    let statuses = repo.statuses(None)?;
+
+    for entry in statuses.iter() {
+        if let Some(path) = entry.path() {
+            if path == file_path {
+                // Check if file has any uncommitted changes (modified, added, deleted, etc.)
+                let status = entry.status();
+                return Ok(!status.is_empty());
+            }
+        }
+    }
+
+    Ok(false)
 }
 
 pub fn ensure_on_forkme_branch(repo: &Repository) -> Result<()> {

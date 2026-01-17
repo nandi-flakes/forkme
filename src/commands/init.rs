@@ -42,10 +42,10 @@ pub fn run(url: Option<String>, branch: &str, depth: Option<usize>) -> Result<()
     println!("Created forkme.toml");
 
     // Clone the repository
-    let repo = git::clone_repo(&url, &branch, depth)?;
+    let repo = git::clone_repo(&url, branch, depth)?;
 
     // Create the forkme branch
-    git::create_forkme_branch(&repo, &branch)?;
+    git::create_forkme_branch(&repo, branch)?;
 
     // Create patches directory
     patch::ensure_patches_dir()?;

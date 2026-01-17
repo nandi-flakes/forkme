@@ -36,7 +36,11 @@ enum Commands {
     Apply,
 
     /// Sync changes from source back to patches
-    Sync,
+    Sync {
+        /// Ignore files that have uncommitted changes in the working tree
+        #[arg(long)]
+        ignore_uncommitted: bool,
+    },
 
     /// Show the current status of the forkme project
     Status,
@@ -54,7 +58,7 @@ fn main() -> Result<()> {
     match cli.command {
         Commands::Init { url, branch, depth } => commands::init::run(url, &branch, depth)?,
         Commands::Apply => commands::apply::run()?,
-        Commands::Sync => commands::sync::run()?,
+        Commands::Sync { ignore_uncommitted } => commands::sync::run(ignore_uncommitted)?,
         Commands::Status => commands::status::run()?,
         Commands::Stats => commands::stats::run()?,
         Commands::Update => commands::update::run()?,
