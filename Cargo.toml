@@ -1,0 +1,22 @@
+[package]
+name = "forkme"
+version = "0.1.0"
+edition = "2021"
+description = "A tool for managing forks using a patch-based approach"
+license = "AGPL-3.0-only"
+repository = "https://tangled.org/me.webbeef.org/forkme"
+readme = "README.md"
+keywords = ["git", "fork", "patch", "diff", "maintenance"]
+categories = ["command-line-utilities", "development-tools"]
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+diffy = "0.4"
+git2 = "0.20"
+serde = { version = "1", features = ["derive"] }
+toml = "0.9"
+walkdir = "2"
+
+[dev-dependencies]
+tempfile = "3"
