@@ -7,7 +7,7 @@ use crate::config::{Config, Upstream};
 use crate::git::{self, SOURCE_DIR};
 use crate::patch;
 
-pub fn run(url: Option<String>, branch: &str) -> Result<()> {
+pub fn run(url: Option<String>, branch: &str, depth: Option<usize>) -> Result<()> {
     // Determine the URL - either from argument or existing config
     let url = match url {
         Some(u) => u,
@@ -42,7 +42,7 @@ pub fn run(url: Option<String>, branch: &str) -> Result<()> {
     println!("Created forkme.toml");
 
     // Clone the repository
-    let repo = git::clone_repo(&url, &branch)?;
+    let repo = git::clone_repo(&url, &branch, depth)?;
 
     // Create the forkme branch
     git::create_forkme_branch(&repo, &branch)?;

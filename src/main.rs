@@ -23,9 +23,13 @@ enum Commands {
         #[arg(long)]
         url: Option<String>,
 
-        /// Branch to track from upstream
+        /// Branch to track from upstream (default to main)
         #[arg(long, default_value = "main")]
         branch: String,
+
+        /// Limit the git cloning depth (optional)
+        #[arg(long)]
+        depth: Option<usize>,
     },
 
     /// Apply patches to the source directory
@@ -48,7 +52,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Init { url, branch } => commands::init::run(url, &branch)?,
+        Commands::Init { url, branch, depth } => commands::init::run(url, &branch, depth)?,
         Commands::Apply => commands::apply::run()?,
         Commands::Sync => commands::sync::run()?,
         Commands::Status => commands::status::run()?,

@@ -5,11 +5,22 @@ use std::path::Path;
 pub const SOURCE_DIR: &str = "source";
 pub const FORKME_BRANCH: &str = "forkme";
 
-pub fn clone_repo(url: &str, branch: &str) -> Result<Repository> {
-    println!("Cloning {} (branch: {})...", url, branch);
+pub fn clone_repo(url: &str, branch: &str, depth: Option<usize>) -> Result<Repository> {
+    let depth_msg = match depth {
+        Some(d) => format!(" with depth {}", d),
+        None => String::new(),
+    };
+    println!("Cloning {} (branch: {}){}...", url, branch, depth_msg);
 
     let mut builder = git2::build::RepoBuilder::new();
     builder.branch(branch);
+
+    // Set fetch depth if provided
+    if let Some(d) = depth {
+        let mut fetch_options = git2::FetchOptions::new();
+        fetch_options.depth(d as i32);
+        builder.fetch_options(fetch_options);
+    }
 
     let repo = builder
         .clone(url, Path::new(SOURCE_DIR))
