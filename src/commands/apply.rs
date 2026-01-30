@@ -3,7 +3,7 @@ use git2::Repository;
 use std::fs;
 use std::path::Path;
 
-use crate::config::Config;
+use crate::config::{self, Config};
 use crate::git::{self, SOURCE_DIR};
 use crate::patch::{self, PatchEntry};
 
@@ -19,7 +19,14 @@ pub fn run() -> Result<()> {
     }
 
     git::ensure_on_forkme_branch(&repo)?;
-    git::reset_to_upstream(&repo, &config.upstream.branch)?;
+
+    // Reset to locked commit if available, otherwise upstream branch
+    if let Some(locked_sha) = config::load_lock()? {
+        let oid = git::resolve_commit(&repo, &locked_sha)?;
+        git::reset_to_commit(&repo, oid)?;
+    } else {
+        git::reset_to_upstream(&repo, &config.upstream.branch)?;
+    }
 
     apply_patches(&repo)?;
 

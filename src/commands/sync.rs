@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::collections::HashSet;
 
-use crate::config::Config;
+use crate::config::{self, Config};
 use crate::git::{self, FileContent};
 use crate::patch::{self, PatchEntry};
 
@@ -97,7 +97,12 @@ pub fn run(ignore_uncommitted: bool) -> Result<()> {
     // Clean up empty directories
     patch::cleanup_empty_dirs()?;
 
+    // Update the lock file with current upstream commit
+    let upstream_sha = git::get_upstream_commit_sha(&repo, &config.upstream.branch)?;
+    config::save_lock(&upstream_sha)?;
+
     println!("\nSynced {} files.", processed_files.len());
+    println!("Updated forkme.lock to {}", &upstream_sha[..12]);
 
     if !skipped_files.is_empty() {
         println!(

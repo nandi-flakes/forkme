@@ -4,6 +4,7 @@ use std::fs;
 use std::path::Path;
 
 const CONFIG_FILE: &str = "forkme.toml";
+const LOCK_FILE: &str = "forkme.lock";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -41,6 +42,26 @@ impl Config {
     pub fn exists() -> bool {
         Path::new(CONFIG_FILE).exists()
     }
+}
+
+pub fn load_lock() -> Result<Option<String>> {
+    let path = Path::new(LOCK_FILE);
+    if !path.exists() {
+        return Ok(None);
+    }
+    let content =
+        fs::read_to_string(path).with_context(|| format!("Failed to read {}", LOCK_FILE))?;
+    let sha = content.trim().to_string();
+    if sha.is_empty() {
+        return Ok(None);
+    }
+    Ok(Some(sha))
+}
+
+pub fn save_lock(sha: &str) -> Result<()> {
+    fs::write(LOCK_FILE, format!("{}\n", sha))
+        .with_context(|| format!("Failed to write {}", LOCK_FILE))?;
+    Ok(())
 }
 
 #[cfg(test)]

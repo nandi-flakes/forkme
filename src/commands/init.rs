@@ -3,7 +3,7 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
 
-use crate::config::{Config, Upstream};
+use crate::config::{self, Config, Upstream};
 use crate::git::{self, SOURCE_DIR};
 use crate::patch;
 
@@ -44,8 +44,14 @@ pub fn run(url: Option<String>, branch: &str, depth: Option<usize>) -> Result<()
     // Clone the repository
     let repo = git::clone_repo(&url, branch, depth)?;
 
-    // Create the forkme branch
-    git::create_forkme_branch(&repo, branch)?;
+    // Create the forkme branch - from locked commit if available
+    if let Some(locked_sha) = config::load_lock()? {
+        let oid = git::resolve_commit(&repo, &locked_sha)?;
+        git::create_forkme_branch_at(&repo, oid)?;
+        println!("Using locked upstream revision: {}", &locked_sha[..12]);
+    } else {
+        git::create_forkme_branch(&repo, branch)?;
+    }
 
     // Create patches directory
     patch::ensure_patches_dir()?;

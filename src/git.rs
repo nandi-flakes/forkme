@@ -42,6 +42,11 @@ pub fn create_forkme_branch(repo: &Repository, upstream_branch: &str) -> Result<
         .with_context(|| format!("Failed to find remote branch {}", upstream_ref))?;
 
     let commit = reference.peel_to_commit()?;
+    create_forkme_branch_at(repo, commit.id())
+}
+
+pub fn create_forkme_branch_at(repo: &Repository, oid: git2::Oid) -> Result<()> {
+    let commit = repo.find_commit(oid)?;
 
     // Create the forkme branch
     repo.branch(FORKME_BRANCH, &commit, false)
@@ -65,15 +70,36 @@ pub fn get_upstream_commit(repo: &Repository, branch: &str) -> Result<git2::Oid>
     Ok(reference.peel_to_commit()?.id())
 }
 
+pub fn get_upstream_commit_sha(repo: &Repository, branch: &str) -> Result<String> {
+    let oid = get_upstream_commit(repo, branch)?;
+    Ok(oid.to_string())
+}
+
+pub fn resolve_commit(repo: &Repository, sha: &str) -> Result<git2::Oid> {
+    let oid = git2::Oid::from_str(sha).with_context(|| format!("Invalid commit SHA: {}", sha))?;
+    // Verify the commit exists
+    repo.find_commit(oid).with_context(|| {
+        format!(
+            "Commit {} not found. You may need a deeper clone (remove --depth option).",
+            sha
+        )
+    })?;
+    Ok(oid)
+}
+
 pub fn reset_to_upstream(repo: &Repository, branch: &str) -> Result<()> {
     let upstream_oid = get_upstream_commit(repo, branch)?;
-    let commit = repo.find_commit(upstream_oid)?;
+    reset_to_commit(repo, upstream_oid)
+}
+
+pub fn reset_to_commit(repo: &Repository, oid: git2::Oid) -> Result<()> {
+    let commit = repo.find_commit(oid)?;
     let obj = commit.as_object();
 
     repo.reset(obj, ResetType::Hard, None)
         .with_context(|| "Failed to reset to upstream")?;
 
-    println!("Reset to upstream {}", branch);
+    println!("Reset to {}", &oid.to_string()[..12]);
     Ok(())
 }
 
