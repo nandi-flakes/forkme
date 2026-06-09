@@ -120,7 +120,7 @@ pub fn has_uncommitted_changes(repo: &Repository, file_path: &str) -> Result<boo
     let statuses = repo.statuses(None)?;
 
     for entry in statuses.iter() {
-        if let Some(path) = entry.path() {
+        if let Ok(path) = entry.path() {
             if path == file_path {
                 // Check if file has any uncommitted changes (modified, added, deleted, etc.)
                 let status = entry.status();
