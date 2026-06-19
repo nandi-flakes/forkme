@@ -155,7 +155,7 @@ fn test_create_repo_with_git2() {
     // Verify commit exists
     let head = repo.head().unwrap();
     let commit = head.peel_to_commit().unwrap();
-    assert_eq!(commit.message(), Some("Initial commit"));
+    assert_eq!(commit.message().unwrap(), "Initial commit");
 
     // Verify files exist
     assert!(temp_dir.path().join("README.md").exists());

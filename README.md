@@ -39,6 +39,28 @@ Only `forkme.toml` and `patches/` are committed to your repository.
 cargo install --path .
 ```
 
+## Development
+
+If you use `devenv`, enter the project shell with:
+
+```bash
+devenv shell
+```
+
+This provides Rust and Git. It also exposes a few helper commands inside the shell:
+
+```bash
+cargo-test
+cargo-fmt
+cargo-lint
+```
+
+If you use `direnv`, allow the checked-in `.envrc` once:
+
+```bash
+direnv allow
+```
+
 ## Usage
 
 ### Initialize a new project
