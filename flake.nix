@@ -28,8 +28,6 @@
       packages = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
-        in
-        {
           forkme = pkgs.rustPlatform.buildRustPackage {
             pname = "forkme";
             version = "0.2.0";
@@ -44,7 +42,24 @@
               platforms = platforms.unix;
             };
           };
-          default = self.packages.${system}.forkme;
+        in
+        {
+          inherit forkme;
+          default = forkme;
+        }
+        // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+          oci = pkgs.dockerTools.buildLayeredImage {
+            name = "forkme";
+            tag = "latest";
+            contents = [ forkme pkgs.cacert pkgs.gitMinimal ];
+            config = {
+              Entrypoint = [ "${pkgs.lib.getExe forkme}" ];
+              Env = [
+                "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+              ];
+              WorkingDir = "/work";
+            };
+          };
         });
 
       apps = forAllSystems (system: {
